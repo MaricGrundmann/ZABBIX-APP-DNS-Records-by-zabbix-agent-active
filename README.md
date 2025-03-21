@@ -5,7 +5,12 @@ Zabbix Template to monitor DNS Records
 - Monitor any DNS Record
 - 
 
-## Items
-
 ## Macros
-- 
+|Macro|Value|Description|
+|-----|-----|-----------|
+{DOMAINS.ARRAY}|domain.tld:A,domain2.tld:MX|Array of monitored Records|
+{DNSSERVER}|(optional)|Define custom DNS Server|
+
+## Trigger
+- (Warning) Record changed
+- (High) Record no longer available

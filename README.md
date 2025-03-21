@@ -4,3 +4,8 @@ Zabbix Template to monitor DNS Records
 ## Features
 - Monitor any DNS Record
 - 
+
+## Items
+
+## Macros
+- 

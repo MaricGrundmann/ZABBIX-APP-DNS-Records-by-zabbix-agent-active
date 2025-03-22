@@ -1,0 +1,105 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: 48a783b89beb44d1aaf931c9f7d4a10a
+      template: 'APP-DNS Records by zabbix agent active'
+      name: 'APP-DNS Records by zabbix agent active'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 284cdf1e578f4cc082d7d128abdc032c
+          name: 'Domain Discovery RAW'
+          type: SCRIPT
+          key: domain.raw
+          value_type: TEXT
+          trends: '0'
+          params: |
+            params = JSON.parse(value),
+            
+            domain = params.Macro.split(",");
+            out_string = '';
+            for (x in domain) {
+              out = domain[x].split(":");
+              out_string += '{"DOMAIN":"'+ out[0]+ '"';
+              out_string += ',"TYPE":"'+ out[1] + '"';
+              out_string += '},';
+             }
+            out_string = out_string.substring(0, out_string.length - 1);
+            
+            return '[' + out_string + ']';
+          parameters:
+            - name: Macro
+              value: '{$DOMAINS.ARRAY}'
+      discovery_rules:
+        - uuid: 39cde9596e634ee89eb7dec9fcff4f47
+          name: 'Domain Discovery'
+          type: DEPENDENT
+          key: domain.discovery
+          delay: '0'
+          item_prototypes:
+            - uuid: 131bce1182f94a939aae537160c75d15
+              name: 'DNS: Record {#TYPE}'
+              type: ZABBIX_ACTIVE
+              key: 'net.dns.record[{$DNSSERVER},{#DOMAIN},{#TYPE}]'
+              delay: 10s
+              value_type: TEXT
+              trends: '0'
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      domain = "{#DOMAIN}"
+                      type = "{#TYPE}"
+                      regexp = new RegExp(domain + "\\s*" + type +"\\s*(\.*)");
+                      out_string = "";
+                      
+                      splitted = value.split("\n");
+                      
+                      splitted.sort();
+                      
+                      for (x in splitted) {
+                          test = splitted[x].match(regexp);
+                          if (out_string === "") {
+                              out_string += test[1];
+                          } else {
+                              out_string += "\n";
+                              out_string += test[1];
+                          }
+                      }
+                      
+                      return out_string;
+              tags:
+                - tag: Domain
+                  value: '{#DOMAIN}'
+                - tag: Type
+                  value: '{#TYPE}'
+              trigger_prototypes:
+                - uuid: 09e8c41237c94da684757ee1355bd9cc
+                  expression: 'change(/APP-DNS Records by zabbix agent active/net.dns.record[{$DNSSERVER},{#DOMAIN},{#TYPE}])=1'
+                  recovery_mode: NONE
+                  name: '{#TYPE} Record changed on {#DOMAIN}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    - tag: Domain
+                      value: '{#DOMAIN}'
+                - uuid: 9453f407bdc74902856be77f978e1609
+                  expression: 'nodata(/APP-DNS Records by zabbix agent active/net.dns.record[{$DNSSERVER},{#DOMAIN},{#TYPE}],5m)=1'
+                  name: '{#TYPE} Record of {#DOMAIN} no longer available'
+                  opdata: 'No data for {#TYPE} record of domain {#DOMAIN} since 5 minutes'
+                  priority: HIGH
+          master_item:
+            key: domain.raw
+          lld_macro_paths:
+            - lld_macro: '{#DOMAIN}'
+              path: $.DOMAIN
+            - lld_macro: '{#TYPE}'
+              path: $.TYPE
+      macros:
+        - macro: '{$DNSSERVER}'
+        - macro: '{$DOMAINS.ARRAY}'
+          value: 'domain1.tld:A,domain1.tld:MX,domain2:AAAA,domain2:MX'
+          description: 'DOMAIN.TLD:TYPE i.e. google.com:A,bing.de:AAAA'

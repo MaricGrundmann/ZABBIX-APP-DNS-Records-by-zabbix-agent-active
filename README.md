@@ -1,5 +1,6 @@
 # ZABBIX-APP-DNS-Records-by-zabbix-agent-active
 Zabbix Template to monitor DNS Records
+- Tested with v. 7.0.10
 
 ## Features
 - Monitor any DNS Record

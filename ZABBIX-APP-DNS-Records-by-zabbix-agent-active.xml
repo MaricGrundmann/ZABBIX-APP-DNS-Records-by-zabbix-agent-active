@@ -59,7 +59,7 @@ return '[' + out_string + ']';</params>
                             <name>DNS: Record {#TYPE}</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>net.dns.record[{$DNSSERVER},{#DOMAIN},{#TYPE}]</key>
-                            <delay>10s</delay>
+                            <delay>2m</delay>
                             <value_type>TEXT</value_type>
                             <trends>0</trends>
                             <preprocessing>

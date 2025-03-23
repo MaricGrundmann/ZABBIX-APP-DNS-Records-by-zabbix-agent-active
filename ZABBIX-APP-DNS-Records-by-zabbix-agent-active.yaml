@@ -44,7 +44,7 @@ zabbix_export:
               name: 'DNS: Record {#TYPE}'
               type: ZABBIX_ACTIVE
               key: 'net.dns.record[{$DNSSERVER},{#DOMAIN},{#TYPE}]'
-              delay: 10s
+              delay: 2m
               value_type: TEXT
               trends: '0'
               preprocessing:
